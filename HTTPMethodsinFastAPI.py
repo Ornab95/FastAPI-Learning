@@ -1,6 +1,6 @@
 # from locale import str
 # from rich.status import status
-from fastapi import FastAPI, Path, HTTPException
+from fastapi import FastAPI, Path, HTTPException, Query
 import json
 
 app = FastAPI()
@@ -34,3 +34,16 @@ def getPatiestById(Pid: str = Path(..., description="Id of the patient in string
     if Pid in data:
         return data[Pid]
     raise HTTPException(status_code = 404, detail= "Patient not found." )
+
+@app.get("/sort")
+def sortPatient(sortBy: str = Query(...,description="Sort on the bases of Height, Weight,BMI"),order: str = Query("asc", description="Sort by Ascending order")):
+    validField = ['height','weight','bmi']
+    if sortBy not in validField:
+        raise HTTPException(status_code=400,detail=f"Invalid Row Selected{validField}")
+
+    if order not in ['asc','dsc']:
+        raise HTTPException(status_code=400, detail="Invalid Order selected")
+    data = viewData()
+    sortOrder = True if order == 'dsc' else False
+    sortedData = sorted(data.values(),key = lambda x: x.get(sortBy,0),reverse=sortOrder) 
+    return sortedData
